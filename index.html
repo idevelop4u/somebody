@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Somebody - Justin Bieber (Typewriter Lyrics Visualizer)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #10131a;
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    }
+    #bg-video {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: 0;
+      filter: brightness(0.55) blur(1px);
+      pointer-events: none;
+    }
+    .glow-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0.5;
+      overflow: hidden;
+    }
+    .glow-circle {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.22;
+      mix-blend-mode: lighten;
+      transition: opacity 1s;
+      will-change: transform, opacity;
+    }
+    .rain-container {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    #lyrics {
+      position: fixed;
+      bottom: 10vh;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 85vw;
+      text-align: center;
+      z-index: 3;
+      pointer-events: none;
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 2px 12px #000, 0 0px 32px #6190e8;
+      letter-spacing: 0.03em;
+      opacity: 0;
+      transition: opacity 1s;
+      user-select: none;
+      line-height: 1.3;
+      background: rgba(30,38,55,0.18);
+      border-radius: 1em;
+      padding: 0.5em 1em;
+      min-height: 2.5em;
+      /* typewriter cursor */
+      border-right: .12em solid #fff;
+      white-space: pre-line;
+      overflow: hidden;
+    }
+    #play-btn {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      background: rgba(30,38,55,0.75);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 100px;
+      height: 100px;
+      font-size: 2.5rem;
+      cursor: pointer;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s;
+      outline: none;
+      animation: pulse 1.5s infinite;
+    }
+    #play-btn:hover {
+      background: rgba(97,144,232,0.85);
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(97,144,232,0.6);}
+      70% { box-shadow: 0 0 0 20px rgba(97,144,232,0);}
+      100% { box-shadow: 0 0 0 0 rgba(97,144,232,0);}
+    }
+  </style>
+</head>
+<body>
+  <!-- Video background -->
+  <video id="bg-video" autoplay loop muted playsinline>
+    <source src="assets/bg.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+
+  <!-- Glowing Visualizer Circles -->
+  <div class="glow-bg"></div>
+
+  <!-- Rain effect (optional) -->
+  <div class="rain-container"></div>
+
+  <!-- Lyrics display -->
+  <div id="lyrics"></div>
+
+  <!-- Play button -->
+  <button id="play-btn" aria-label="Play">&#9658;</button>
+
+  <!-- Audio playback -->
+  <audio id="bg-audio" src="assets/Somebody.mp3"></audio>
+
+  <script>
+    // ----- Visualizer Glow Circles -----
+    const glowBg = document.querySelector('.glow-bg');
+    const colors = [
+      'rgba(97,144,232,0.8)',
+      'rgba(255,99,132,0.8)',
+      'rgba(255,255,102,0.8)',
+      'rgba(102,255,204,0.8)',
+      'rgba(186,104,200,0.8)'
+    ];
+    const circles = [];
+    const circleCount = 5;
+    for (let i = 0; i < circleCount; i++) {
+      const div = document.createElement('div');
+      div.className = 'glow-circle';
+      div.style.background = colors[i % colors.length];
+      glowBg.appendChild(div);
+      circles.push({
+        el: div,
+        x: Math.random(),
+        y: Math.random(),
+        r: 220 + Math.random() * 180,
+        dx: (Math.random() - 0.5) * 0.0008,
+        dy: (Math.random() - 0.5) * 0.0008,
+        dr: (Math.random() - 0.5) * 0.02,
+        opacity: 0.13 + Math.random() * 0.11
+      });
+    }
+    function animateCircles() {
+      const w = window.innerWidth, h = window.innerHeight;
+      circles.forEach(c => {
+        c.x += c.dx;
+        c.y += c.dy;
+        c.r += c.dr;
+        if (c.x < 0 || c.x > 1) c.dx *= -1;
+        if (c.y < 0 || c.y > 1) c.dy *= -1;
+        if (c.r < 180 || c.r > 400) c.dr *= -1;
+        c.el.style.left = `${c.x * 100}%`;
+        c.el.style.top = `${c.y * 100}%`;
+        c.el.style.width = c.el.style.height = `${c.r}px`;
+        c.el.style.marginLeft = `${-c.r/2}px`;
+        c.el.style.marginTop = `${-c.r/2}px`;
+        c.el.style.opacity = c.opacity;
+      });
+      requestAnimationFrame(animateCircles);
+    }
+    animateCircles();
+
+    // ----- Rain animation (optional) -----
+    const rainContainer = document.querySelector('.rain-container');
+    const dropCount = 70;
+    for (let i = 0; i < dropCount; i++) {
+      const drop = document.createElement('i');
+      const width = Math.random() * 2.8 + 1.2;
+      const left = Math.random() * 100;
+      const delay = Math.random() * -18;
+      const duration = Math.random() * 2.5 + 3.7;
+      const opacity = Math.random() * 0.5 + 0.35;
+      drop.style.width = `${width}px`;
+      drop.style.left = `${left}vw`;
+      drop.style.animationDelay = `${delay}s`;
+      drop.style.animationDuration = `${duration}s`;
+      drop.style.opacity = opacity;
+      const blueish = [
+        "linear-gradient(transparent, #7ed6df 80%, #b2bec3 100%)",
+        "linear-gradient(transparent, #4e54c8 70%, #8f94fb 100%)",
+        "linear-gradient(transparent, #232526 60%, #414345 100%)"
+      ];
+      drop.style.background = blueish[Math.floor(Math.random() * blueish.length)];
+      rainContainer.appendChild(drop);
+    }
+
+    // ----- Lyrics timing and typewriter effect -----
+    const lyricsData = [
+      { time: 12.8, text: "Every time I wake up next to you I talk to God" },
+      { time: 15.9, text: "And I'm so damn grateful 'cause you make up for the things I'm not" },
+      { time: 19.6, text: "Didn't know I needed nothing till I needed you" },
+      { time: 25.2, text: "In a world that's spinning it ain't easy letting go" },
+      { time: 28.2, text: "8 billion people we're just looking for a hand to hold" },
+      { time: 32.3, text: "Everybody's tryna find something to hold on to" },
+      { time: 37.7, text: "It's okay, it's okay" },
+      { time: 39.8, text: "We all try to pretend that we're brave" },
+      { time: 44.5, text: "When I'm weak, yeah, I'm strong 'cause of you at the end of the day" },
+      { time: 49.7, text: "Everybody needs somebody (Everybody needs somebody)" },
+      { time: 52.8, text: "Somebody to remind you that you're not alone" },
+      { time: 55.8, text: "Who gon' defend you like an army (Defend you like an army)" },
+      { time: 59.3, text: "And never let go (And never let go)" },
+      { time: 61.6, text: "Everybody needs somebody (Everybody needs somebody)" },
+      { time: 65.5, text: "Somebody to wake up to when everyone's gone" },
+      { time: 68.2, text: "So if you need me then you got me (If you need me then you got me)" },
+      { time: 72.0, text: "I'll be the shoulder you cry on" },
+      { time: 75.0, text: "Everybody needs some-" },
+      { time: 81.3, text: "Everybody needs somebody" },
+      { time: 88.8, text: "Every time I look at you I'm looking at a star" },
+      { time: 91.7, text: "It's the way you light up any room just being who you are" },
+      { time: 94.9, text: "Didn't know I needed nothing till I needed you" },
+      { time: 101.3, text: "Right before I met you I never believed in magic" },
+      { time: 104.3, text: "But you stole my heart before anyone knew you had it" },
+      { time: 107.5, text: "I know that you know what we got it don't come easy" },
+      { time: 114.2, text: "It's okay, it's okay" },
+      { time: 115.5, text: "We all try to pretend that we're brave" },
+      { time: 120.2, text: "When I'm weak, yeah, I'm strong 'cause of you at the end of the day" },
+      { time: 125.2, text: "Everybody needs somebody (Everybody needs somebody)" },
+      { time: 128.5, text: "Somebody to remind you that you're not alone" },
+      { time: 131.5, text: "Who gon' defend you like an army (Defend you like an army)" },
+      { time: 134.8, text: "And never let go (And never let go)" },
+      { time: 137.8, text: "Everybody needs somebody (Everybody needs somebody)" },
+      { time: 141.3, text: "Somebody to wake up to when everyone's gone" },
+      { time: 144.1, text: "So if you need me then you got me (If you need me then you got me)" },
+      { time: 147.9, text: "I'll be the shoulder you cry on" },
+      { time: 150.7, text: "Everybody needs some-" },
+      { time: 156.9, text: "Everybody needs somebody" }
+    ];
+
+    const lyricsDiv = document.getElementById('lyrics');
+    const audio = document.getElementById('bg-audio');
+    const playBtn = document.getElementById('play-btn');
+    let currentLyric = -1;
+    let fadeTimeout = null;
+    let typewriterTimeout = null;
+    let lyricsActive = false;
+
+    function typewriter(text, idx, speed, callback) {
+      if (idx === 0) lyricsDiv.innerHTML = '';
+      if (idx < text.length) {
+        lyricsDiv.innerHTML += text.charAt(idx);
+        typewriterTimeout = setTimeout(() => {
+          typewriter(text, idx + 1, speed, callback);
+        }, speed);
+      } else if (callback) {
+        callback();
+      }
+    }
+
+    function showLyricTypewriter(text, typingSpeed = 28) {
+      lyricsDiv.style.opacity = 1;
+      typewriter(text, 0, typingSpeed, null);
+    }
+
+    function hideLyric() {
+      lyricsDiv.style.opacity = 0;
+      clearTimeout(typewriterTimeout);
+    }
+
+    function updateLyrics() {
+      if (!lyricsActive) return;
+      const currentTime = audio.currentTime;
+      let nextLyric = -1;
+      for (let i = 0; i < lyricsData.length; i++) {
+        if (currentTime >= lyricsData[i].time) {
+          nextLyric = i;
+        }
+      }
+      if (nextLyric !== currentLyric) {
+        if (nextLyric !== -1) {
+          clearTimeout(typewriterTimeout);
+          showLyricTypewriter(lyricsData[nextLyric].text);
+          let nextTime = (lyricsData[nextLyric + 1] ? lyricsData[nextLyric + 1].time : audio.duration);
+          let displayDuration = Math.max(1.5, nextTime - lyricsData[nextLyric].time - 0.5);
+          clearTimeout(fadeTimeout);
+          fadeTimeout = setTimeout(hideLyric, displayDuration * 1000);
+        } else {
+          hideLyric();
+        }
+        currentLyric = nextLyric;
+      }
+      requestAnimationFrame(updateLyrics);
+    }
+
+    playBtn.addEventListener('click', () => {
+      audio.play();
+      playBtn.style.display = 'none';
+      lyricsActive = true;
+      requestAnimationFrame(updateLyrics);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && playBtn.style.display !== 'none') {
+        playBtn.click();
+      }
+    });
+
+    document.body.addEventListener('touchstart', () => {
+      if (playBtn.style.display !== 'none') playBtn.click();
+    }, { once: true });
+
+    audio.addEventListener('ended', () => {
+      currentLyric = -1;
+      hideLyric();
+      playBtn.style.display = '';
+      lyricsActive = false;
+    });
+
+    audio.volume = 0.8;
+  </script>
+</body>
+</html>
